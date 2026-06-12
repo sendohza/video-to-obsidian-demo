@@ -1,0 +1,21 @@
+﻿{
+  "name": "kawuxing-mahjong",
+  "version": "2.0.0",
+  "description": "卡五星麻将 - 1v2 AI 对战",
+  "homepage": "https://sendohza.github.io/kawuxing-mahjong",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "deploy": "gh-pages -d . -f"
+  },
+  "keywords": ["mahjong", "卡五星", "麻将"],
+  "author": "sendohza",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.60.0"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  }
+}
