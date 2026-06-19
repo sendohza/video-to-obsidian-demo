@@ -21,19 +21,14 @@ document.getElementById('run').addEventListener('click',async()=>{
   if(!url){alert('请输入视频链接');return}
   const out=document.getElementById('out');
   out.style.display='block';
-  out.innerHTML='提交中...';
+  out.innerHTML='准备跳转到 GitHub Actions...';
   try{
-    const res=await fetch('https://api.github.com/repos/sendohza/video-to-obsidian-demo/dispatches',{
-      method:'POST',
-      headers:{'Content-Type':'application/json',Accept:'application/vnd.github+json',Authorization:""},
-      body:JSON.stringify({event_type:'video2md',client_payload:{video_url:url}})
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    out.innerHTML='已触发 Actions。请在仓库 Actions 查看运行状态，完成后可在 docs/results/ 查看结果。';
-  }catch(e){out.innerHTML='提交失败：'+e.message}
+    await navigator.clipboard.writeText(url);
+    const actionsUrl='https://github.com/sendohza/video-to-obsidian-demo/actions/workflows/video2md.yml';
+    window.open(actionsUrl,'_blank');
+    out.innerHTML='链接已复制，请在打开的 GitHub Actions 页面中点击 <b>Run workflow</b>，粘贴链接后运行。完成后可在 <a href="https://github.com/sendohza/video-to-obsidian-demo/tree/main/docs/results" target="_blank">docs/results/</a> 查看结果。';
+  }catch(e){out.innerHTML='操作失败：'+e.message}
 });
 </script>
 </body>
 </html>
-
-
