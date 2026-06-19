@@ -1,0 +1,68 @@
+﻿name: video2md
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: "视频链接"
+        required: true
+        type: string
+      lang:
+        description: "语言代码，如 zh/en"
+        required: false
+        default: "zh"
+        type: string
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          pip install --upgrade pip
+          pip install openai-whisper
+          pip install yt-dlp
+      - name: 下载视频并提取音频
+        run: |
+          set -e
+          URL="${{ inputs.video_url }}"
+          LANG="${{ inputs.lang }}"
+          yt-dlp -o "downloads/%(title)s.%(ext)s" "$URL"
+          MP4=$(ls downloads/*.mp4 | head -n 1)
+          MP3="downloads/audio.mp3"
+          ffmpeg -i "$MP4" -vn -acodec libmp3lame -q:a 2 -y "$MP3"
+      - name: Whisper 转写
+        run: |
+          whisper downloads/audio.mp3 --model medium --language ${{ inputs.lang }} --output_format txt --output_dir outputs
+      - name: 生成 Markdown
+        run: |
+          mkdir -p docs/results
+          TITLE=$(ls downloads/*.mp4 | head -n 1 | xargs -n1 basename | sed 's/\.[^.]*$//')
+          TXT=outputs/audio.txt
+          MD=docs/results/${TITLE}.md
+          {
+            echo "---"
+            echo "title: $TITLE"
+            echo "source: ${{ inputs.video_url }}"
+            echo "date: $(date -I)"
+            echo "---"
+            echo ""
+            echo "# $TITLE"
+            echo ""
+            echo "## 原始文案"
+            echo ""
+            cat "$TXT"
+            echo ""
+            echo "## 优化文案"
+            echo ""
+            echo "（此处可接入 LLM 或手工优化）"
+          } > "$MD"
+      - name: 提交结果
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/results
+          git diff --cached --quiet && echo "无变更" && exit 0
+          git commit -m "chore(video2md): update results"
+          git push
